@@ -1,50 +1,37 @@
 require 'readline'
 require_relative 'ui/banner'
-
-# ==========================================
-# BASE CLASS
-# ==========================================
+require_relative 'ui/version'
 class BaseModule
   attr_accessor :options, :description
-
   def initialize
     @options = {}
-    @description = "Tidak ada deskripsi."
+    @description = "No description provide.."
   end
-
   def register_option(key, default, required, description)
-    # Memastikan key selalu disimpan dalam format UPPERCASE
     @options[key.to_s.upcase] = { value: default, required: required, desc: description }
   end
-
   def run
-    puts "[-] Error: Method 'run' belum didefinisikan di modul ini."
+    puts "[-] Error: Method 'run' not definited"
   end
 end
-
-# ==========================================
-# CORE FRAMEWORK
-# ==========================================
 class QuwaisFramework
   MODULE_DIR = "modules"
-
   def initialize
     Dir.mkdir(MODULE_DIR) unless Dir.exist?(MODULE_DIR)
     @current_mod_instance = nil
     @current_mod_name = nil
     @running = true
   end
-
   def start
-    puts "[-] Quwaisploit core by Muhammad Quwais Saputra"
+    banner_show
+    showversion
+    puts "\033[1;37m[\033[1;31m-\033[1;37m] \033[1;31mQuwaisploit core by Muhammad Quwais Saputra\033[0;37m"
     while @running
       prompt = @current_mod_name ? "\033[1;31mQ\033[1;37muwaisploit(\e[31m#{@current_mod_name}\033[1;37m)$> \033[0;32m" : "\033[1;31mQ\033[1;37muwaisploit$> \033[0;32m"
       input = Readline.readline(prompt, true)
       printf("\033[0;37m")
       next if input.nil? || input.strip.empty?
-      
       cmd, *args = input.split(' ')
-
       case cmd
       when 'help', '?' then show_help
       when 'show' then handle_show(args[0])
@@ -58,9 +45,7 @@ class QuwaisFramework
       end
     end
   end
-
   private
-
   def show_help
     puts "\nQuwaisploit Commands"
     puts "  show modules          List All Availabe Modules"
@@ -71,17 +56,14 @@ class QuwaisFramework
     puts "  clear                 clear the terminal"
     puts "  back                  back the modules\n\n"
   end
-
   def handle_show(sub_cmd)
     sub_cmd == 'modules' ? list_modules : show_options
   end
-
   def list_modules
     puts "\nModules"
     puts "============================"
     printf "  %-40s %s\n", "Name", "Description"
     printf "  %-40s %s\n", "----", "-----------"
-
     Dir.glob(File.join(MODULE_DIR, "**", "*.rb")).each do |f|
       begin
         display_path = f.sub("./", "").sub("#{MODULE_DIR}/", "").sub(".rb", "")
@@ -94,11 +76,9 @@ class QuwaisFramework
     end
     puts ""
   end
-
   def load_module(name)
     clean_input = name.sub(/^#{MODULE_DIR}\//, "").sub(/\.rb$/, "")
     full_path = "./#{MODULE_DIR}/#{clean_input}.rb"
-
     if File.exist?(full_path)
       begin
         load full_path
@@ -114,7 +94,6 @@ class QuwaisFramework
       puts "[-] Modul Not Found: #{clean_input}"
     end
   end
-
   def show_options
     return puts "[-] Pilih modul dahulu." unless @current_mod_instance
     puts "\nModule Options (#{@current_mod_name}):\n"
@@ -125,7 +104,6 @@ class QuwaisFramework
     end
     puts ""
   end
-
   def set_val(key, val)
     return puts "[-] Pilih modul dahulu." unless @current_mod_instance
     if key && @current_mod_instance.options.key?(key.upcase)
@@ -135,23 +113,18 @@ class QuwaisFramework
       puts "[-] Variabel not found."
     end
   end
-
   def go_back
     @current_mod_instance = nil
     @current_mod_name = nil
   end
-
   def execute_mod
     return puts "[-] Modules not selected" unless @current_mod_instance
-    
-    # Validasi input wajib
     @current_mod_instance.options.each do |k, v|
       if v[:required] && (v[:value].nil? || v[:value].to_s.strip.empty?)
         puts "[-] Error: Option #{k} must be setted first"
         return
       end
     end
-
     puts "\033[31m[$] \033[37mRunning the modules"
     begin
       @current_mod_instance.run
@@ -161,6 +134,4 @@ class QuwaisFramework
     end
   end
 end
-
-banner_show
 QuwaisFramework.new.start
